@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "metadata": { "name": "Границы - 1.0.0" },
+  "features": [
+    {
+      "type": "Feature",
+      "id": 0,
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [29.66851677059303, 60.215141555365626],
+            [29.66851677059303, 59.69816595140694],
+            [31.047330765466263, 59.69816595140694],
+            [31.047330765466263, 60.215141555365626],
+            [29.66851677059303, 60.215141555365626]
+          ]
+        ]
+      },
+      "properties": {
+        "description": "#viewbox",
+        "fill": "#ffffff",
+        "fill-opacity": 0,
+        "stroke": "#000000",
+        "stroke-width": "5",
+        "stroke-opacity": 1
+      }
+    }
+  ]
+}
