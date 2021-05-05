@@ -1,0 +1,54 @@
+name: Telegram Notifications
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    name: Send message to Telegram
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Format Telegram Message
+        env:
+          gh_event: ${{ toJSON(github.event) }}
+          msg_template: |
+            {{#repository}}
+            📣 ОБНОВЛЕНИЯ В <b><a href="{{{repository.html_url}}}">{{{repository.full_name}}}</a></b>
+
+            {{/repository}}
+            {{#commits}}
+            <strong><a href="{{{url}}}">✔️ {{id}}</a></strong>
+            <em>({{timestamp}})</em> by <strong><a href="https://github.com/{{author.username}}">👤{{author.username}}</a></strong>
+
+            <pre>{{message}}
+            </pre>
+            {{/commits}}
+            {{^commits}}No commits found... :({{/commits}}
+        run: |
+          # Mustache via npx
+          echo "${gh_event}" > view.json
+          echo "${msg_template}" > template.mustache
+          npx -q mustache@4.2 view.json template.mustache > __out__
+          echo "::group::Debug output"
+          cat -- __out__
+          echo "::endgroup::"
+
+      - name: Send formatted message
+        run: |
+          curl -q -s -L --max-time 10 --retry 5 --retry-delay 2 --retry-max-time 10 \
+            -d "disable_web_page_preview=false" -d "parse_mode=HTML" \
+            -d "chat_id=${{secrets.TELEGRAM_TO}}" --data-urlencode "text@"<(cat -- __out__) \
+            "https://api.telegram.org/bot${{secrets.TELEGRAM_TOKEN}}/sendMessage" > result.json
+
+      - name: Check Telegram response
+        run: |
+          [[ $(jq '.ok' result.json 2>/dev/null) == "true" ]] || ( printf "::error::\
+          Telegram API response: %s - %s\n" \
+          $(jq '.error_code,.description' result.json 2>/dev/null || echo '<Not JSON!>'); \
+          exit 1 )
